@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+ 	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="title icon" type="image/png" href="images/title-img.png"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/all.js" ></script>
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" ></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" ></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" ></script>
+    <title>JSON Search Tool</title>
+</head>
+<body>
+	<div style="background-image: url('JSON.png');background-repeat: no-repeat;background-size: 100%;">
+		<section>
+		    <div class="container-fluid">
+		        <div class="row bg-info justify-content-center align-items-center" style="height: 20vh">
+		           <div class="col-sm-10 text-center">
+		               <h1 class="text-capitalize"><span class="text-white font-weight-bold">JSON Search Tool</span></h1>
+		           </div>
+		        </div>
+		    </div>
+		</section>
+		
+		<div><button class="btn btn-danger" id="homeButton" style="margin-bottom:-0.3%;margin-top:0.2%;margin-left:90%;display:none"><i class="bi bi-house-fill"></i>&nbsp&nbspHome</button></div>
+	
+		<div class="card card-body" style="margin-left:22%; margin-top:1.7%; margin-bottom:1.7%; width: 50rem;" id="searchForm">
+			<form action="/JSONSearch/getOccurances" autocomplete="off">
+				<div class="form-group">
+					<label for="searchKey">Key to be Searched</label>
+					<input type="text" class="form-control" id="searchKey" name="searchKey" placeholder="Enter Search key here" required>
+				</div>
+				<div class="form-group">
+					<label for="jsonString">JSON To be parsed</label>
+					<textarea class="form-control" id="jsonString" name="jsonString" rows="4" placeholder="Enter JSON here" required></textarea>
+				</div>
+				<div class="form-group">
+					<button type="button" onclick="sendUserData()" class="btn btn-primary">Search</button>
+				</div>
+			</form>
+		</div>
+		
+		<div class="card card-body" id="searchResult" style="margin-left:22%; margin-bottom:0.6%; width: 50rem; display:none">
+			<div class="form-group">
+				<label for="numberOfOccurances">number Of Occurances</label>
+				<input type="text" class="form-control" readOnly="true" id="numberOfOccurances" name="numberOfOccurances">
+			</div>
+			<div class="form-group" style="height:28.5vh; overflow:auto;">
+				<table class="table table-striped table-hover" id="resultTable">
+					<thead class="thead-dark">
+						<tr>
+							<th>Key Name</th>
+							<th>Value Type</th>
+							<th>Level</th>
+							<th>Parent Name</th>
+							<th>JSON path</th>
+						</tr>
+					</thead>
+					<tbody id="resultTableBody"></tbody>
+				</table>
+			</div>
+		</div>	
+	
+		<footer  style="background-color: #2c292f;">
+		   <div class="container">
+		       <div class="row ">
+		           <div class="col-md-12 text-center text-md-left ">                    
+		               <div class="py-0">
+		                   <h5 class="my-4 text-white">About<span class="mx-2 font-italic text-success ">JSON Search Tool</span></h5>
+		                   <div class="text-light py-0 mb-4">This is a tool that is used to find the number of occurances of a key or a part of the key in a JSON which is provided by the user.
+		                   <br>The details regarding each occurance like the occurance key, datatype of value, the level at which the occurance is spotted, the parent key and the path to the occurance key will be displayed.</div>
+		               </div>
+		           </div>
+		       </div>  
+		   </div>
+		</footer>
+	</div>
+	<script>
+		document.getElementById("homeButton").onclick = function () {
+	        window.location.reload();
+	    };
+	    
+		function sendUserData(){
+			var url="/JSONSearch/getOccurances";
+			var searchKey=document.getElementById('searchKey').value;
+			var jsonString=document.getElementById('jsonString').value;
+			var nodeData={
+					searchKey:searchKey,
+					jsonString:jsonString
+			}
+			$.ajax({
+				type: 'POST',
+				url: url,
+				async:true,
+				dataType: 'json',
+		        contentType: 'application/json; charset=utf-8',
+		        data: JSON.stringify(nodeData),
+				  success:function(data){
+				  	  document.getElementById('searchForm').style.display = "none";
+				  	  document.getElementById('searchResult').style.display = "block";
+				  	  document.getElementById('homeButton').style.display = "block";
+				  	  document.getElementById('numberOfOccurances').value = data.numberOfOccurances;
+				  	  table = document.getElementById("table");
+				  	  var tr,td;
+				  	  var tbody = document.getElementById('resultTableBody');
+				  	  for(var i = 0; i < data.numberOfOccurances; i++) {
+				  	  	  tr = tbody.insertRow(tbody.rows.length);
+				  	  	  td = tr.insertCell(tr.cells.length);
+				  	  	  td.setAttribute("align", "center");
+				  	  	  td.innerHTML = data.searchResult[i].key;
+				  	  	  td = tr.insertCell(tr.cells.length);
+				  	  	  td.innerHTML = data.searchResult[i].dataType;
+				  	  	  td = tr.insertCell(tr.cells.length);
+				  	  	  td.innerHTML = data.searchResult[i].level;
+				  	  	  td = tr.insertCell(tr.cells.length);
+				  	  	  td.innerHTML = data.searchResult[i].parent;
+				  	  	  td = tr.insertCell(tr.cells.length);
+				  	  	  td.innerHTML = data.searchResult[i].path;
+			          }
+					  console.log(data);
+				  },
+				  error:function(err){
+					  console.log(err);
+				  }
+				});
+		}
+	</script>
+</body>
+</html>
